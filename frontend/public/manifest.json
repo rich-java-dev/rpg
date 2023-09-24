@@ -1,0 +1,11 @@
+{
+  "short_name": "gaming.richwhite.net",
+  "name": "rpg",
+  "icons": [
+  
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
