@@ -3,12 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.world = void 0;
 const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
-const World_1 = require("./game-classes/World");
-const Player_1 = require("./game-classes/Player");
 const PlayerRouter_1 = require("./routes/PlayerRouter");
+const AuthRouter_1 = require("./routes/AuthRouter");
+const path = require("path");
 dotenv_1.default.config();
 const port = process.env.PORT;
 const app = (0, express_1.default)();
@@ -65,11 +64,12 @@ app.use(cookieParser());
 // REACT FRONT-END
 //
 // use static file server of compiled/webpack React app
-app.use(express_1.default.static("./react-build/"));
+app.use(express_1.default.static(path.join(__dirname, "../react-build/")));
 //
 // Routers
 //
 app.use("/player", PlayerRouter_1.PlayerRouter);
+app.use("/auth", AuthRouter_1.AuthRouter);
 // // root end-point
 // app.get("/", (req: Request, res: Response) => {
 //   res.send("Hello World!");
@@ -77,14 +77,6 @@ app.use("/player", PlayerRouter_1.PlayerRouter);
 const server = app.listen(port, () => {
     console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
 });
-const init = () => {
-    exports.world = new World_1.World();
-    let player = new Player_1.Player();
-    player.id = "RW";
-    player.name = "Rich";
-    exports.world.players.push(player);
-};
-init();
 //
 // Web Socket Server Registry
 //
@@ -95,7 +87,6 @@ var wss = new WebSocketServer({
     server: server,
     path: process.env.WEBSOCKET_ENDPOINT || "/websocketgame",
 });
-console.log(wss);
 // behavior of websocket once first connecting.
 wss.on("connection", (socket, req) => {
     const remoteIp = req.socket.remoteAddress;

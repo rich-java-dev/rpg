@@ -1,12 +1,20 @@
 import "./App.css";
 import { useState } from "react";
 import { Route } from "react-router-dom";
-import { MainView } from "./components/MainView";
+import { Canvas } from "./components/MainView";
+import { MenuBar } from "./components/MenuBar";
+import About from "./components/About";
+import Login from "./components/Login";
+import Profile from "./components/Profile";
 
 const App = () => {
   return (
     <div className="App">
-      <Route exact path="/" component={MainView} />
+      <MenuBar />
+      <Route path="/about" component={About} />
+      <Route path="/login" component={Login} />
+      <Route path = "/profile" component = {Profile} />
+      <Route exact path="/" component={Canvas} />
     </div>
   );
 };

@@ -1,8 +1,9 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
-import { World } from "./game-classes/World";
-import { Player } from "./game-classes/Player";
 import { PlayerRouter } from "./routes/PlayerRouter";
+import { AuthRouter } from "./routes/AuthRouter";
+
+const path = require("path");
 
 dotenv.config();
 const port = process.env.PORT;
@@ -75,12 +76,13 @@ app.use(cookieParser());
 //
 
 // use static file server of compiled/webpack React app
-app.use(express.static("./react-build/"));
+app.use(express.static(path.join(__dirname, "../react-build/")));
 
 //
 // Routers
 //
 app.use("/player", PlayerRouter);
+app.use("/auth", AuthRouter);
 
 // // root end-point
 // app.get("/", (req: Request, res: Response) => {
@@ -90,19 +92,6 @@ app.use("/player", PlayerRouter);
 const server = app.listen(port, () => {
   console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
 });
-
-// Initialize Game World
-export let world: World;
-
-const init = () => {
-  world = new World();
-
-  let player: Player = new Player();
-  player.id = "RW";
-  player.name = "Rich";
-  world.players.push(player);
-};
-init();
 
 //
 // Web Socket Server Registry
