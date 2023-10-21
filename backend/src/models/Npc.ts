@@ -3,7 +3,7 @@ import { Item } from "./Item";
 
 const Schema = mongoose.Schema;
 
-const PlayerSchema = new Schema({
+const NpcSchema = new Schema({
 
   name: { type: String, required: true, unique: true },
 
@@ -21,4 +21,4 @@ const PlayerSchema = new Schema({
 
 });
 
-export const Player = mongoose.model("Player", PlayerSchema);
+export const Npc = mongoose.model("Npc", NpcSchema);

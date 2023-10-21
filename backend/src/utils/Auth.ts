@@ -26,21 +26,36 @@ init();
 export const userRegister = async (req: any, res: any, next: any) => {
   const { userName, pw } = req.body;
   if (pw.length < 6) {
-    return res.status(400).json({ message: "Password less than 6 characters" });
+    return res
+      .status(400)
+      .json({ message: "Password must be at least 6 characters." });
   }
+
+  const hashPw = await bcrypt.hash(pw, SALT + "");
+
   try {
-    await User.create({
-      userName,
-      pw,
-    }).then((user: any) =>
-      res.status(200).json({
-        message: "User successfully created",
-        user,
-      })
-    );
+    let userObj = { userName: userName, pw: hashPw };
+
+    const user = await User.findOne(userObj);
+    if (user)
+      return res.status(401).json({
+        message: "User already exists!",
+      });
+
+    User.create(userObj)
+      .then(() =>
+        res.status(200).json({
+          message: "User successfully created!",
+        })
+      )
+      .catch((err) => {
+        res.status(401).json({
+          message: "An error has occured. User may already exist.",
+        });
+      });
   } catch (err: any) {
     res.status(401).json({
-      message: "User not successful created",
+      message: "User not successfully created!",
       error: err.mesage,
     });
   }
@@ -49,7 +64,7 @@ export const userRegister = async (req: any, res: any, next: any) => {
 export const userLogin = async (req: any, res: any, next: any) => {
   const userName = req.body.userName;
   const rawPw = req.body.pw;
-  const hashPw = await bcrypt.hash(rawPw, SALT);
+  const hashPw = await bcrypt.hash(rawPw, SALT + "");
 
   try {
     let userObj = { userName: userName, pw: hashPw };
@@ -72,8 +87,8 @@ export const userLogin = async (req: any, res: any, next: any) => {
       });
     } else {
       res.status(401).json({
-        message: "Login not successful",
-        error: "User not found",
+        message: "Login not successful.",
+        error: "User/Password is incorrect.",
       });
     }
   } catch (error: any) {
@@ -84,17 +99,18 @@ export const userLogin = async (req: any, res: any, next: any) => {
   }
 };
 
-export const userAuth = (req: any, res: any, next: any) => {
+export const userAuth = async (req: any, res: any, next: any) => {
   const token = req.cookies.jwt;
   if (token) {
-    jwt.verify(token, JWT_SECRET, (err: any, decodedToken: any) => {
+    jwt.verify(token, JWT_SECRET, async (err: any, decodedToken: any) => {
       if (err) {
         return res.status(401).json({ message: "Not authorized" });
       } else {
-        if (decodedToken.userName !== "test") {
-          return res.status(401).json({ message: "Not authorized" });
-        } else {
+        const user = await User.findOne({ userName: decodedToken.userName });
+        if (user) {
           next();
+        } else {
+          return res.status(401).json({ message: "Not authorized" });
         }
       }
     });

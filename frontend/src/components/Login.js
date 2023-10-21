@@ -50,6 +50,24 @@ const Login = () => {
       });
   };
 
+  const signUpButtonPerformed = async () => {
+    console.log(userName);
+    console.log(pw);
+
+    fetch("https://gaming.richwhite.net/auth/sign-up", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ userName: userName, pw: pw }),
+    })
+      .then((res) => res.text())
+      .then((text) => {
+        alert(text);
+      });
+  };
+
   return (
     <div className={classes.root}>
       <Card sx={{ minWidth: 275 }}>
@@ -85,6 +103,10 @@ const Login = () => {
 
             <div>
               <Button onClick={() => loginButtonPerformed()}>Log In</Button>
+            </div>
+
+            <div>
+              <Button onClick={() => signUpButtonPerformed()}>Sign Up</Button>
             </div>
           </Box>
         </CardContent>

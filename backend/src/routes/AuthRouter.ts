@@ -1,5 +1,5 @@
 import express, { Router, Request, Response } from "express";
-import { userLogin, userAuth } from "../utils/Auth";
+import { userLogin, userAuth, userRegister } from "../utils/Auth";
 import * as jwt from "jsonwebtoken";
 
 const JWT_SECRET: any = process.env.JWT_SECRET;
@@ -10,6 +10,11 @@ const router: Router = express.Router();
  * LOGIN END-POINT
  */
 router.post("/login", userLogin);
+
+/**
+ * REGISTER USER END-POINT
+ */
+router.post("/sign-up", userRegister);
 
 /**
  * END-POINT protected behind userAuth middle-ware

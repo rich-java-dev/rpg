@@ -25,8 +25,12 @@ router.get("/", userAuth, async (req: Request, res: Response) => {
       res.send("ERROR");
     } else {
       const userName = decodedToken.userName;
+      const playerKey = { name: userName };
 
-      const player = await Player.find({ id: userName });
+      let player = await Player.findOne(playerKey);
+      if (!player) Player.create(playerKey);
+      player = await Player.findOne(playerKey);
+
       if (player) res.json(player);
       else res.send("No Player here...");
     }
