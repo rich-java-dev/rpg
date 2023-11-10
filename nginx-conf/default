@@ -1,0 +1,192 @@
+limit_conn_zone $binary_remote_addr zone=addr:10m;
+
+upstream websocket {
+   	server 127.0.0.1:1234; #10.32.0.4:1234;
+   	server 127.0.0.1:6543;
+}
+
+#
+# www.richwhite.net
+#
+server {    
+    limit_conn addr 10;
+    client_body_timeout 5s;
+    client_header_timeout 5s;
+    
+	server_tokens off;
+	listen 443 ssl default_server;
+	listen [::]:443 ssl default_server;
+	root /var/www/richwhite.net;
+	index index.html index.htm;
+    server_name www.richwhite.net richwhite.net;
+	
+	location / {
+     	proxy_set_header        Host $host;
+     	proxy_set_header        X-Real-IP $remote_addr;
+     	proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+     	proxy_set_header        X-Forwarded-Proto $scheme;
+	
+     	# Fix the “It appears that your reverse proxy set up is broken" error.
+     	proxy_pass          	http://127.0.0.1:8080;
+     	proxy_read_timeout  90;
+	
+     	proxy_redirect      	http://127.0.0.1:8080 https://www.richwhite.net;
+		
+     	# proxy_pass          	http://127.0.0.1:8080;
+     	# try_files $uri $uri/ =404;
+	}
+
+    #ssl_certificate /etc/letsencrypt/live/richwhite.net/fullchain.pem;
+    #ssl_certificate_key /etc/letsencrypt/live/ricwhite.net/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/richwhite.net-0001/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/richwhite.net-0001/privkey.pem; # managed by Certbot
+
+}
+
+# redirect http to https
+server {
+    if ($host = richwhite.net) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    if ($host = www.richwhite.net) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    #if ($host = richwhite.net) {
+    #    return 301 https://$host$request_uri;
+    #} # managed by Certbot
+
+
+    listen 80;
+    server_name richwhite.net www.richwhite.net;
+    return 301 https://www.richwhite.net$request_uri;
+
+}
+
+#
+# drawing.richwhite.net
+#
+server {    
+    limit_conn addr 10;
+    client_body_timeout 5s;
+    client_header_timeout 5s;
+    
+	server_tokens off;
+	listen 443 ssl;
+	listen [::]:443 ssl;
+	root /var/www/letsdrawtogether.net;
+	index index.html index.htm;
+    server_name drawing.richwhite.net;
+
+	location /websockettest {
+	        proxy_pass http://websocket;
+	        proxy_http_version 1.1;
+	        proxy_set_header Upgrade $http_upgrade;
+	        proxy_set_header Connection "upgrade";
+	        proxy_set_header Host $host;
+	    }	
+	
+	location / {
+     	proxy_set_header        Host $host;
+     	proxy_set_header        X-Real-IP $remote_addr;
+     	proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+     	proxy_set_header        X-Forwarded-Proto $scheme;
+	
+     	# Fix the “It appears that your reverse proxy set up is broken" error.
+     	proxy_pass          	http://127.0.0.1:1234;
+     	proxy_read_timeout  90;
+	
+     	proxy_redirect      	http://127.0.0.1:1234 https://drawing.richwhite.net;
+		
+     	# proxy_pass          	http://127.0.0.1:1234;
+     	# try_files $uri $uri/ =404;
+	}
+    ssl_certificate /etc/letsencrypt/live/drawing.richwhite.net/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/drawing.richwhite.net/privkey.pem; # managed by Certbot#
+
+}
+
+# redirect http to https
+server {
+    if ($host = www.drawing.richwhite.net) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    if ($host = drawing.richwhite.net) {
+        return 301 https://drawing.richwhite.net$request_uri;
+    } # managed by Certbot
+
+
+    listen 80;
+    server_name drawing.richwhite.net www.drawing.richwhite.net;
+    return 301 https://drawing.richwhite.net$request_uri;
+
+}
+
+
+#
+# gaming.richwhite.net
+#
+server {    
+    limit_conn addr 10;
+    client_body_timeout 5s;
+    client_header_timeout 5s;
+    
+	server_tokens off;
+	listen 443 ssl;
+	listen [::]:443 ssl;
+	root /var/gaming/richwhite.net;
+	index index.html index.htm;
+    server_name gaming.richwhite.net;
+
+	location /websocketgame {
+	        proxy_pass http://websocket;
+	        proxy_http_version 1.1;
+	        proxy_set_header Upgrade $http_upgrade;
+	        proxy_set_header Connection "upgrade";
+	        proxy_set_header Host $host;
+	    }	
+	
+	location / {
+     	proxy_set_header        Host $host;
+     	proxy_set_header        X-Real-IP $remote_addr;
+     	proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+     	proxy_set_header        X-Forwarded-Proto $scheme;
+	
+     	# Fix the “It appears that your reverse proxy set up is broken" error.
+     	proxy_pass          	http://127.0.0.1:6543;
+     	proxy_read_timeout  90;
+	
+     	proxy_redirect      	http://127.0.0.1:6543 https://drawing.richwhite.net;
+		
+     	# proxy_pass          	http://127.0.0.1:6543;
+     	# try_files $uri $uri/ =404;
+	}
+    ssl_certificate /etc/letsencrypt/live/gaming.richwhite.net/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/gaming.richwhite.net/privkey.pem; # managed by Certbot#
+
+
+}
+
+# gaming.richwhite.net http redirect to https
+server {
+    if ($host = www.gaming.richwhite.net) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    if ($host = gaming.richwhite.net) {
+        return 301 https://gaming.richwhite.net$request_uri;
+    } # managed by Certbot
+
+
+    listen 80;
+    server_name gaming.richwhite.net www.gaming.richwhite.net;
+    return 301 https://gaming.richwhite.net$request_uri;
+
+}
+
