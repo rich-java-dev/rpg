@@ -36,20 +36,31 @@ init();
 const userRegister = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { userName, pw } = req.body;
     if (pw.length < 6) {
-        return res.status(400).json({ message: "Password less than 6 characters" });
+        return res
+            .status(400)
+            .json({ message: "Password must be at least 6 characters." });
     }
+    const hashPw = yield bcrypt.hash(pw, SALT + "");
     try {
-        yield User_1.User.create({
-            userName,
-            pw,
-        }).then((user) => res.status(200).json({
-            message: "User successfully created",
-            user,
-        }));
+        let userObj = { userName: userName, pw: hashPw };
+        const user = yield User_1.User.findOne(userObj);
+        if (user)
+            return res.status(401).json({
+                message: "User already exists!",
+            });
+        User_1.User.create(userObj)
+            .then(() => res.status(200).json({
+            message: "User successfully created!",
+        }))
+            .catch((err) => {
+            res.status(401).json({
+                message: "An error has occured. User may already exist.",
+            });
+        });
     }
     catch (err) {
         res.status(401).json({
-            message: "User not successful created",
+            message: "User not successfully created!",
             error: err.mesage,
         });
     }
@@ -58,7 +69,7 @@ exports.userRegister = userRegister;
 const userLogin = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const userName = req.body.userName;
     const rawPw = req.body.pw;
-    const hashPw = yield bcrypt.hash(rawPw, SALT);
+    const hashPw = yield bcrypt.hash(rawPw, SALT + "");
     try {
         let userObj = { userName: userName, pw: hashPw };
         const user = yield User_1.User.findOne(userObj);
@@ -78,8 +89,8 @@ const userLogin = (req, res, next) => __awaiter(void 0, void 0, void 0, function
         }
         else {
             res.status(401).json({
-                message: "Login not successful",
-                error: "User not found",
+                message: "Login not successful.",
+                error: "User/Password is incorrect.",
             });
         }
     }
@@ -91,27 +102,28 @@ const userLogin = (req, res, next) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.userLogin = userLogin;
-const userAuth = (req, res, next) => {
+const userAuth = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const token = req.cookies.jwt;
     if (token) {
-        jsonwebtoken_1.default.verify(token, JWT_SECRET, (err, decodedToken) => {
+        jsonwebtoken_1.default.verify(token, JWT_SECRET, (err, decodedToken) => __awaiter(void 0, void 0, void 0, function* () {
             if (err) {
                 return res.status(401).json({ message: "Not authorized" });
             }
             else {
-                if (decodedToken.userName !== "test") {
-                    return res.status(401).json({ message: "Not authorized" });
-                }
-                else {
+                const user = yield User_1.User.findOne({ userName: decodedToken.userName });
+                if (user) {
                     next();
                 }
+                else {
+                    return res.status(401).json({ message: "Not authorized" });
+                }
             }
-        });
+        }));
     }
     else {
         return res
             .status(401)
             .json({ message: "Not authorized, token not available" });
     }
-};
+});
 exports.userAuth = userAuth;

@@ -3,10 +3,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Player = void 0;
+exports.Npc = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const Schema = mongoose_1.default.Schema;
-const PlayerSchema = new Schema({
+const NpcSchema = new Schema({
     name: { type: String, required: true, unique: true },
     maxHp: { type: Number, required: true, default: 100 },
     maxMp: { type: Number, required: true, default: 100 },
@@ -17,4 +17,4 @@ const PlayerSchema = new Schema({
     hp: { type: Number, required: true, default: 100 },
     mp: { type: Number, required: true, default: 100 },
 });
-exports.Player = mongoose_1.default.model("Player", PlayerSchema);
+exports.Npc = mongoose_1.default.model("Npc", NpcSchema);

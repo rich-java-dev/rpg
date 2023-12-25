@@ -6,8 +6,16 @@ import {
   enableBodyScroll,
   clearAllBodyScrollLocks,
 } from "body-scroll-lock";
-
 import { Button, Checkbox, Box, TextField } from "@material-ui/core";
+import {
+  getKeyAction,
+  getKeyActionInput,
+  getMouseAction,
+  getMouseActionInput,
+} from "../util/InputHandler";
+
+import { gameState } from "../util/GameState";
+import { drawCircle } from "../util/Drawing";
 
 const useStyles = makeStyles({
   root: {
@@ -28,8 +36,6 @@ const useStyles = makeStyles({
 
 const serverAddr = process.env.SERVER_ADDR || "gaming.richwhite.net";
 const wsEndPoint = process.env.WEBSOCKET_ENDPOINT || "websocketgame";
-let roomId = "";
-let CLEAR_CANVAS_CMD = JSON.stringify({ action: "CLEAR", topic: roomId });
 
 let width = window.innerWidth - 15;
 let height = window.innerHeight - 200;
@@ -37,13 +43,8 @@ let height = window.innerHeight - 200;
 let wsClient = null;
 let canvas;
 
-let canvasState = new Set();
-
-let clearFlag = false;
-
 const init = () => {
-  fetchCanvasState();
-
+  fetchGameState();
   const websockConnStr = `wss://${serverAddr}/${wsEndPoint}`;
   console.log(`Attempting to connect to websocket on: ${websockConnStr}`);
   wsClient = new WebSocket(websockConnStr);
@@ -53,45 +54,60 @@ const init = () => {
   };
 
   wsClient.onmessage = (msg) => {
+    console.log("RECVD:");
     const data = JSON.parse(msg.data);
     console.log(data);
+
+    gameState[data.id] = data;
   };
 };
 
-const postAction = async (canvas, event) => {
-  let msg = { message: "Test!" };
+const postAction = async (action, actionInput) => {
+  let msg = { action: action, actionInput: actionInput };
+  // console.log("POSTING ACTION:");
+  // console.log(msg);
   wsClient.send(JSON.stringify(msg));
 };
 
 const draw = (ctx) => {
+
   clearLocalCanvas(ctx);
+
+  for (let key in gameState) {
+    if (gameState.hasOwnProperty(key)) {
+      let ps = gameState[key];
+      const props = {
+        ctx: ctx,
+        posX: ps.posX,
+        posY: ps.posY,
+        radius: 5,
+        color: ps.color,
+      };
+      drawCircle(props);
+    }
+  }
 };
 
 const clearLocalCanvas = (ctx) => {
-  console.log("Clear Canvas called");
+  //console.log("Clear Canvas called");
   ctx.fillStyle = "white";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 };
 
 //
 //
-const fetchCanvasState = () => {
-  const url = `https://gaming.richwhite.net/api/game-state`;
-  fetch(url, {
-    method: "GET",
-  })
-    .then((res) => res.json())
-    .then((json) => {
-      //json.map((a) => diffState.add(a));
-      // diffState = json;
-    });
+const fetchGameState = () => {
+  // const url = `https://gaming.richwhite.net/api/game-state`;
+  // fetch(url, {
+  //   method: "GET",
+  // })
+  //   .then((res) => res.json())
+  //   .then((json) => {
+  //     //json.map((a) => diffState.add(a));
+  //     // diffState = json;
+  //   });
 };
 
-//
-//
-const handleCanvasUp = (canvas, evt) => {};
-
-//
 //
 const resizeCanvas = (canvas, newWidth, newHeight) => {
   canvas.width = newWidth;
@@ -101,29 +117,44 @@ const resizeCanvas = (canvas, newWidth, newHeight) => {
 };
 
 //
-//
-export const Canvas = ({ match, location }) => {
+export const Canvas = () => {
   const classes = useStyles();
   const canvasRef = useRef();
-
-  CLEAR_CANVAS_CMD = JSON.stringify({ action: "CLEAR", topic: roomId });
 
   disableBodyScroll(canvasRef);
   window.addEventListener("resize", resizeCanvas, false);
 
   //
-  const handleCanvasDown = async (canvas, evt) => {
-    postAction(canvas, evt);
-  };
+  const handleCanvasDown = async (canvas, evt) => {};
 
   //
-  const handleCanvasMove = async (canvas, evt) => {
-    postAction(canvas, evt);
+  const handleCanvasUp = (canvas, evt) => {};
+
+  //
+  const handleCanvasMove = async (canvas, evt) => {};
+
+  //
+  const handleCanvasKeyDown = (canvas, evt) => {
+    const action = getKeyAction(evt);
+    if (action.length > 0) {
+      const actionInput = getKeyActionInput(evt);
+      postAction(action, actionInput);
+    }
+  };
+
+  const handleCanvasMouseDown = (canvas, evt) => {
+    //console.log(evt);
+
+    const action = getMouseAction(evt);
+    if (action.length > 0) {
+      const actionInput = getMouseActionInput(evt);
+      postAction(action, actionInput);
+    }
   };
 
   //
   useEffect(async () => {
-    init(roomId);
+    init();
 
     canvas = canvasRef.current;
 
@@ -150,16 +181,12 @@ export const Canvas = ({ match, location }) => {
   return (
     <div>
       <canvas
+        tabindex="1"
         ref={canvasRef}
         width={width}
         height={height}
-        onMouseDown={(evt) => handleCanvasDown(canvas, evt)}
-        onMouseMove={(evt) => handleCanvasMove(canvas, evt)}
-        onMouseUp={(evt) => handleCanvasUp(canvas, evt)}
-        onMouseLeave={(evt) => handleCanvasUp(canvas, evt)}
-        onTouchStart={(evt) => handleCanvasDown(canvas, evt)}
-        onTouchMove={(evt) => handleCanvasMove(canvas, evt)}
-        onTouchEnd={(evt) => handleCanvasUp(canvas, evt)}
+        onKeyDown={(evt) => handleCanvasKeyDown(canvas, evt)}
+        onMouseDown={(evt) => handleCanvasMouseDown(canvas, evt)}
       />
     </div>
   );

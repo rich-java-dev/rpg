@@ -59,7 +59,11 @@ router.get("/", Auth_1.userAuth, (req, res) => __awaiter(void 0, void 0, void 0,
         }
         else {
             const userName = decodedToken.userName;
-            const player = yield Player_1.Player.find({ id: userName });
+            const playerKey = { name: userName };
+            let player = yield Player_1.Player.findOne(playerKey);
+            if (!player)
+                Player_1.Player.create(playerKey);
+            player = yield Player_1.Player.findOne(playerKey);
             if (player)
                 res.json(player);
             else

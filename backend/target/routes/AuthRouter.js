@@ -38,6 +38,10 @@ exports.AuthRouter = router;
  */
 router.post("/login", Auth_1.userLogin);
 /**
+ * REGISTER USER END-POINT
+ */
+router.post("/sign-up", Auth_1.userRegister);
+/**
  * END-POINT protected behind userAuth middle-ware
  */
 router.get("/profile", Auth_1.userAuth, (req, res) => {

@@ -2,6 +2,7 @@ import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 import { PlayerRouter } from "./routes/PlayerRouter";
 import { AuthRouter } from "./routes/AuthRouter";
+import { processInput } from "./utils/InputHandler";
 
 const path = require("path");
 
@@ -109,6 +110,20 @@ var wss = new WebSocketServer({
 // behavior of websocket once first connecting.
 
 wss.on("connection", (socket: any, req: any) => {
-  const remoteIp = req.socket.remoteAddress;
+  const remoteIp: string = req.socket.remoteAddress;
   logInfo.info("new connection:" + remoteIp);
+
+  socket.on("message", (msg: any) => {
+    // logInfo.info("msg recvd-" + remoteIp);
+    // logInfo.info(msg);
+    let stateChange = processInput(remoteIp, msg);
+    broadcastStateChanges(stateChange);
+  });
 });
+
+const broadcastStateChanges = async (msg: any) => {
+  // broadcast all new changes to all open connections
+  wss.clients.forEach((client: any) => {
+    client.send(JSON.stringify(msg));
+  });
+};
